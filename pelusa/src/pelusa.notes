@@ -1,0 +1,66 @@
+/* NOTES on design
+
+  There are two possible approaches. 
+  1. 	One involves a straight port of the python code to C++. 
+  		Doing this with multithreading involved will probably be difficult enough.
+  2. 	The second involves a map-reduce like architecture. I'm not sure if this should also involve multi threading??
+  
+  Ideally we would design our object so that either of these are possible.
+  
+  1. Straight port would involve a single exec.
+  	 Initially it would run sequentially to create the target db. 
+  	 Possibly later we could lock individual bit arrays to allow for
+  	 thread safety, but I don't this is as easy in C++???
+  	 
+  	 It would require the the following objects, just like the python code:
+  
+  	 - BitArray - to represent the bloom filter.
+  	   is this already implemented???
+  	 - BloomOverlapper - holds the BitArrays. 
+  	 - We might actually benefit from breaking the BloomOverlapper into
+  	 	two objects. A BloomTarget, say, which holds all the blooms. 
+  	 	And a BloomQuerier, which HASA bloom target, but which actually
+  	 	does the querying. This would allow a cleaner decoupling of 
+  	 	creation of the BloomTarget (parallel or not) and querying of it.
+  	 - BloomRunnable - (I believe this is true in C++??)
+  	 - singleton FeatureEncoder - For all the kmer conversion routines.
+  	 
+  2. The map reduce implementation would have the following
+  
+  	NOTE: One thing I'm confused about is where splitting occurs in the map reduce paradigm.  	
+  	
+  	- Something to map a sequence file (or portion of a file)
+  		to a BloomTarget object, which could then optionally be serialized.
+  	-  Something to merge (reduce) multiple BloomTarget o bjects or files. This is 
+  		a little more complicated than just anding their vectors together, as 
+  		we have to maintain the reverse hashes as well
+    - A BloomQuerier which takes a query sequence file and converts each sequence
+      (or subset of sequences) into a BloomMatrix. If this Matrix was complete
+      the BloomQuerier could convert it into ids. Otherwise it could just
+      output the Matrix. 
+    - something to basically cat the ids together at the end.
+     
+    - Note that the map reduce implementation could allow for BloomTarget objects
+      that are too large to fit into memory. But this would substantially complicate the 
+      implementation. I'm also skeptical of Bloom filter objects this large 
+      being wieldy.
+      
+    - But it does allow for another level of parellization. Each BloomTarget could de created
+      using only a subset of kmers on each node (possibly with thread parallelization for different
+      sequences in the target). This could then be serialized or just kept in memory to save time.
+      At query, each BloomQuerier is passed a BloomTarget and analyzes each read (again
+      with thread parallelization for different query sequences) and generates a BloomQueryMatrix (possibly compressed)
+      for the kmers in that BloomTarget for a particular read. These can then be reduced to form
+      the final BloomMatrix with all kmers for a read. 
+      
+      The problem is for large BloomTarget objects, these BloomQueryMatrix objects will be quite
+      large. I'm not sure if we want to have them moving over the network before they are compressed. hmmm.
+      
+      Jason pointed out that keeping a process with a large amount of information in memory can 
+      be difficult with map-reduce.
+      
+      Jon's functional specification only requires 150X on 10Mb genomes, which 
+      should fit handily into memory.
+      1.5 * 10^2 * 10^7 * 20 (for sparseness) / 8 bits = 3.5GB.
+      */
+      

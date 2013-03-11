@@ -1,0 +1,77 @@
+Simulation with Alchemy
+
+alchemy is a bas.h5 simulator that produces files with lengths,
+errors, and quality values modeled after other real sequencing runs.
+
+To simulate using alchemy, first build the empirical model files using
+supporting programs, then simulate the desired number of bas.h5 files.
+
+alchemy is distributed in software/assembly/cpp/simulator/bin/*
+
+The general usage is:
+
+ usage: alchemy outputModel numBasesPerFile [ options ] options:
+ -genome genome.fasta Simulate reads from the reference genome
+ 'genome.fasta'.
+
+  -sourceReadsFile filename When set, simulate reads by reading from
+            'filename', rather than simulating from a genome.  The
+            format of the fasta titles should be
+            >read_index|chr|start_pos|end_pos
+
+  -fixedLength length Set simulated read length to a fixed value of
+            'length', rather than sampling from a length mode.
+            -movieName name ("simulated_movie") Use 'name' for movies
+            rather than m000_000...
+
+  -titleTable name Read in the titleTable to assign chromosome indices
+            from simulated reads.
+
+  -baseFileName name ("simulated") Use an alternative name for the
+            output file, rather than 'simulated'
+
+  -nFiles N (1) The number of files to simulate.
+
+  -meanLength L(0) When set, scales the length of the average read to
+            L.
+
+  -posMap filename Use this when running alignment through
+            compareSequences.py and writing to cmp.h5. Specify a map
+            between movie names and chromosome/positions.
+
+            When set, the simulated positions are not sored in the
+            bas.h5 files and instead printed to 'filename'
+
+  -printPercentRepeat Add to the title table a field that has the
+            percent repeat content of the read shown by lower case in
+            the reference.
+
+
+Option summary: -nfiles The number of files to simulate, each with
+roughly nBases in it.  -meanlength A new value for the mean read
+length.  Scale empirical data to match this.
+
+The other major usage is to take in a set of reads, and output bas.h5
+given those reads.
+
+ alchemy output.model nBases -sourceReadsFile reads.fasta [-nfiles n]
+ [-meanlength L] [-posmap map.txt]
+
+The file output.model contains the models for sequencing error,
+quality values, and read length. Previously these were all in three
+separate files, but they are merged into one now for simplicity.
+
+To create output.model:
+
+cmpH5StoreQualityByContext aligned_reads.cmp.h5 output.model
+
+Quality value information should be loaded into the
+aligned_reads.cmp.h5 file. To do this, with the input.fofn that was
+used to generate the aligned_reads.cmp.h5 file, run:
+
+loadPulses input.fofn aligned_reads.cmp.h5 -metrics
+InsertionQV,DeletionQV,SubstitutionQV,DeletionTag,SubstitutionTag
+
+If the files in "input.fofn" are large, add an option "-byread" to
+load pulses, which will conserve memory. Note, there are no spaces
+between the metrcs. That is important.

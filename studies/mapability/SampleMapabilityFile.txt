@@ -1,0 +1,25 @@
+reference /home/NANOFLUIDICS/mchaisson/projects/alignment/data/celegans/genome/celegans.all.fa
+
+# Error rates in full percentage points (02 = 2.0%)
+error  00 02 04 06 08 10 12 14 16 18 20 22 24 26
+
+# Lengths of reads
+length 100 200 300 400 500 600 700 800 900 1000
+
+# Genome coverage
+coverage .5
+
+simple_shredder /home/NANOFLUIDICS/mchaisson/software/assembly/cpp/sequtils/bin/simpleShredder 
+
+#
+# optional items
+# 
+suffix_array /home/NANOFLUIDICS/mchaisson/projects/alignment/data/celegans/genome/celegans.all.fa.sa
+ctab /home/NANOFLUIDICS/mchaisson/projects/alignment/data/celegans/genome/celegans.all.fa.ctab
+
+
+#
+# Configuration for alignment
+#
+
+mapper /home/NANOFLUIDICS/mchaisson/software/assembly/cpp/alignment/bin/readMatcher
