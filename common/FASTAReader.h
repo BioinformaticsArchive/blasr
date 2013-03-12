@@ -8,6 +8,9 @@
 #include <vector>
 #include <string.h>
 #include <limits.h>
+#include <sys/types.h>
+#include <unistd.h>
+
 #include "sys/mman.h"
 #include "sys/fcntl.h"
 #include "datastructures/metagenome/SequenceIndexDatabase.h"
